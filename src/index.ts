@@ -1,26 +1,29 @@
-// Coleta diária das linhas de ônibus que passam pelo campus Trindade.
+// Coleta diária das linhas de ônibus que passam pelos campi (fonte: API aberta do Bus2/Mobilibus).
 //
-//   bun src/index.ts             coleta, valida, grava data/linhas.json e envia ao Convex
-//   bun src/index.ts --skip-db   coleta, valida e grava o snapshot, sem enviar
-//   bun src/index.ts --dry-run   coleta e valida; não grava nem envia (imprime o resumo)
+//   bun src/index.ts                  todos os campi: coleta, valida, grava data/<campus>.json e envia ao Convex
+//   bun src/index.ts blumenau         só um campus
+//   bun src/index.ts --skip-db        grava os snapshots, sem enviar
+//   bun src/index.ts --dry-run        coleta e valida; não grava nem envia
 //
-// Fluxo: catálogo (/horarios) → página de cada linha → filtro barato pelo itinerário →
-// mapa oficial (KML) das candidatas → fica quem passa a ≤30 m de um ponto do campus.
+// Cada campus é independente: se um falhar, os outros ainda são gravados e enviados; o processo
+// termina com erro para o workflow avisar.
 
 import { existsSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
-import { BASE, parseCatalogo, parseLinha, parseMapa } from './lib/fenix';
-import { fetchHtml, mapLimitado } from './lib/http';
-import { PONTOS, candidataPeloItinerario, trajetosNoCampus } from './lib/campus';
+import { CAMPI, type Campus } from './campi';
+import { rotas, tabela, detalheViagem, type DetalheViagem } from './lib/bus2';
+import { montarLinha, type PontoCampus } from './lib/montar';
+import { mapLimitado, fetchHtml } from './lib/http';
+import { BASE, parseCatalogo } from './lib/fenix';
 import { diasEspeciais } from './lib/feriados';
 import { enviarParaConvex } from './lib/convex';
 import { mudancas, validarContraAnterior } from './lib/validate';
 import type { DadosOnibus, Linha } from './lib/types';
 
-const args = new Set(process.argv.slice(2));
-const DRY = args.has('--dry-run');
-const SKIP_DB = DRY || args.has('--skip-db');
-const SNAPSHOT = 'data/linhas.json';
+const args = process.argv.slice(2);
+const DRY = args.includes('--dry-run');
+const SKIP_DB = DRY || args.includes('--skip-db');
+const escolhidos = args.filter((a) => !a.startsWith('--'));
 
 function hashDe(l: Omit<Linha, 'hash' | 'alteradaEm'>): string {
   const h = new Bun.CryptoHasher('sha1');
@@ -28,98 +31,100 @@ function hashDe(l: Omit<Linha, 'hash' | 'alteradaEm'>): string {
   return h.digest('hex').slice(0, 16);
 }
 
-async function main() {
-  const agora = new Date();
-  const anterior: DadosOnibus | null = existsSync(SNAPSHOT) ? await Bun.file(SNAPSHOT).json() : null;
-  const conhecidas = new Set(anterior?.linhas.map((l) => l.codigo) ?? []);
+/** Florianópolis: link de cada linha para a página oficial do Fênix (o Bus2 não tem página pública por linha). */
+async function urlsFenix(): Promise<Map<string, string>> {
+  try {
+    return new Map(parseCatalogo(await fetchHtml(`${BASE}/horarios`)).map((x) => [x.codigo, x.url]));
+  } catch (e) {
+    console.error(`⚠ catálogo do Fênix indisponível (${(e as Error).message}); links genéricos`);
+    return new Map();
+  }
+}
 
-  const catalogo = parseCatalogo(await fetchHtml(`${BASE}/horarios`));
-  if (catalogo.length < 50) throw new Error(`Catálogo com só ${catalogo.length} linhas (esperado ~200)`);
-  console.log(`Catálogo: ${catalogo.length} linhas`);
+async function coletar(c: Campus, agora: Date): Promise<{ dados: DadosOnibus; resumo: string } | null> {
+  const arquivo = `data/${c.chave}.json`;
+  const anterior: DadosOnibus | null = existsSync(arquivo) ? await Bun.file(arquivo).json() : null;
+  const hoje = new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Sao_Paulo' }).format(agora); // AAAA-MM-DD
 
-  // 1) página de cada linha (horários + itinerário). Página que falha não derruba a coleta,
-  //    a não ser que seja uma linha que já passava no campus.
-  const paginas = await mapLimitado(catalogo, 4, async (item) => {
-    try {
-      return { item, pagina: parseLinha(await fetchHtml(item.url)) };
-    } catch (e) {
-      if (conhecidas.has(item.codigo)) throw new Error(`Linha do campus ${item.codigo} falhou: ${(e as Error).message}`);
-      console.error(`⚠ ${item.codigo} ignorada: ${(e as Error).message}`);
-      return null;
-    }
-  });
+  const rs = await rotas(c.projeto);
+  const tabelas = await mapLimitado(rs, 6, (r) => tabela(r.routeId), 80);
+  const viagens = [...new Set(tabelas.flatMap((t) => t?.trips.map((v) => v.tripId) ?? []))];
+  console.log(`[${c.chave}] ${rs.length} linhas, ${viagens.length} viagens-modelo`);
+  const detalhes = new Map<string, DetalheViagem>();
+  await mapLimitado(viagens, 6, async (id) => detalhes.set(id, await detalheViagem(id)), 80);
 
-  // 2) só baixa o mapa de quem pode passar no campus (itinerário cita rua do entorno, ou já passava)
-  const candidatas = paginas.filter(
-    (p): p is NonNullable<typeof p> =>
-      !!p && !!p.pagina.mapa && (conhecidas.has(p.item.codigo) || candidataPeloItinerario(p.item.nome, p.pagina.itinerario)),
-  );
-  console.log(`Candidatas pelo itinerário: ${candidatas.length}`);
-
+  const urls = c.chave === 'florianopolis' ? await urlsFenix() : new Map<string, string>();
+  const pontos = new Map<string, PontoCampus>();
   const linhas: Linha[] = [];
-  await mapLimitado(candidatas, 3, async ({ item, pagina }) => {
-    const trajetos = trajetosNoCampus(parseMapa(await fetchHtml(BASE + pagina.mapa)), pagina.quadros);
-    if (!trajetos) return;
-    const base = {
-      codigo: item.codigo,
-      nome: pagina.nome || item.nome,
-      url: item.url,
-      caracteristica: pagina.caracteristica,
-      quadros: pagina.quadros,
-      itinerario: pagina.itinerario,
-      trajetos,
-    };
-    const hash = hashDe(base);
-    const antes = anterior?.linhas.find((l) => l.codigo === item.codigo);
-    linhas.push({ ...base, hash, alteradaEm: antes && antes.hash === hash ? antes.alteradaEm : agora.toISOString() });
+  rs.forEach((r, i) => {
+    const t = tabelas[i];
+    if (!t || (c.ignorar && c.ignorar.test(r.shortName ?? ''))) return;
+    const m = montarLinha(c, r, t, detalhes, hoje, urls.get(r.shortName ?? ''));
+    if (!m) return;
+    for (const p of m.pontos) pontos.set(p.id, p);
+    const hash = hashDe(m.linha);
+    const antes = anterior?.linhas.find((l) => l.codigo === m.linha.codigo);
+    linhas.push({ ...m.linha, hash, alteradaEm: antes && antes.hash === hash ? antes.alteradaEm : agora.toISOString() });
   });
   linhas.sort((a, b) => a.codigo.localeCompare(b.codigo, 'pt-BR', { numeric: true }));
 
   const ano = agora.getUTCFullYear();
   const dados: DadosOnibus = {
     versao: 1,
-    campus: 'florianopolis',
-    fonte: `${BASE}/horarios`,
+    campus: c.chave,
+    fonte: c.fontePublica,
     coletadoEm: agora.toISOString(),
     diasEspeciais: diasEspeciais([ano, ano + 1]),
-    pontos: PONTOS,
+    pontos: [...pontos.values()].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
     linhas,
   };
 
-  const erros = validarContraAnterior(dados, anterior);
   const m = mudancas(dados, anterior);
-  const resumo = [
-    `Linhas no campus: ${linhas.map((l) => l.codigo).join(', ')}`,
-    `Novas: ${m.novas.join(', ') || '—'} · Extintas: ${m.extintas.join(', ') || '—'} · Alteradas: ${m.alteradas.join(', ') || '—'}`,
-  ];
-  console.log(resumo.join('\n'));
-  if (process.env.GITHUB_STEP_SUMMARY) {
-    await Bun.write(process.env.GITHUB_STEP_SUMMARY, `### Ônibus do campus\n\n${resumo.map((r) => `- ${r}`).join('\n')}\n`);
-  }
+  console.log(`[${c.chave}] ${linhas.length} linhas no campus (${dados.pontos.length} pontos): ${linhas.map((l) => l.codigo).join(', ')}`);
+  console.log(`[${c.chave}] novas: ${m.novas.join(', ') || '—'} · extintas: ${m.extintas.join(', ') || '—'} · alteradas: ${m.alteradas.join(', ') || '—'}`);
+  const erros = validarContraAnterior(dados, anterior);
   if (erros.length) {
-    console.error(`\n✖ Validação falhou (${erros.length}); nada foi gravado:\n- ${erros.join('\n- ')}`);
-    process.exit(1);
+    console.error(`✖ [${c.chave}] validação falhou (${erros.length}); nada gravado:\n- ${erros.join('\n- ')}`);
+    return null;
   }
-
-  if (DRY) {
-    console.log('\n--dry-run: nada gravado.');
-    return;
-  }
-  await mkdir('data', { recursive: true });
-  await Bun.write(SNAPSHOT, JSON.stringify(dados, null, 1) + '\n');
-  // usado pela mensagem de commit do workflow; vazio = nada mudou nas linhas
   const partes = [
-    m.novas.length && `novas: ${m.novas.join(', ')}`,
-    m.extintas.length && `extintas: ${m.extintas.join(', ')}`,
-    m.alteradas.length && `alteradas: ${m.alteradas.join(', ')}`,
+    m.novas.length && `novas ${m.novas.length > 8 ? `${m.novas.length} linhas` : m.novas.join(', ')}`,
+    m.extintas.length && `extintas ${m.extintas.join(', ')}`,
+    m.alteradas.length && `alteradas ${m.alteradas.length > 8 ? `${m.alteradas.length} linhas` : m.alteradas.join(', ')}`,
   ].filter(Boolean);
-  await Bun.write('data/mudancas.txt', partes.join(' · ') + '\n');
-  console.log(`Snapshot gravado em ${SNAPSHOT}`);
+  return { dados, resumo: partes.length ? `${c.chave}: ${partes.join(' · ')}` : '' };
+}
 
-  if (!SKIP_DB) {
-    const r = await enviarParaConvex(dados);
-    console.log(r === 'enviado' ? 'Enviado ao Convex.' : '⚠ CONVEX_SITE_URL/INGEST_API_KEY ausentes: envio pulado.');
+async function main() {
+  const agora = new Date();
+  const campi = escolhidos.length ? CAMPI.filter((c) => escolhidos.includes(c.chave)) : CAMPI;
+  if (!campi.length) throw new Error(`Campus desconhecido: ${escolhidos.join(', ')}`);
+  let falhou = false;
+  const resumos: string[] = [];
+
+  for (const c of campi) {
+    try {
+      const r = await coletar(c, agora);
+      if (!r) { falhou = true; continue; }
+      if (r.resumo) resumos.push(r.resumo);
+      if (DRY) continue;
+      await mkdir('data', { recursive: true });
+      await Bun.write(`data/${c.chave}.json`, JSON.stringify(r.dados, null, 1) + '\n');
+      if (!SKIP_DB) {
+        const s = await enviarParaConvex(r.dados);
+        console.log(`[${c.chave}] ${s === 'enviado' ? 'enviado ao Convex' : 'CONVEX_SITE_URL/INGEST_API_KEY ausentes: envio pulado'}`);
+      }
+    } catch (e) {
+      falhou = true;
+      console.error(`✖ [${c.chave}] ${(e as Error).message}`);
+    }
   }
+
+  if (!DRY) await Bun.write('data/mudancas.txt', resumos.join(' | ') + '\n'); // usado na mensagem de commit
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    await Bun.write(process.env.GITHUB_STEP_SUMMARY, `### Ônibus dos campi\n\n${resumos.map((r) => `- ${r}`).join('\n') || '- sem mudanças nas linhas'}\n`);
+  }
+  if (falhou) process.exit(1);
 }
 
 main().catch((e) => {

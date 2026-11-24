@@ -1,50 +1,61 @@
 # onibus-ufsc
 
-Linhas, horários e trajetos dos ônibus que passam pelo campus Trindade da UFSC, para o app Nossa UFSC.
+Linhas, horários e trajetos dos ônibus que passam pelos campi da UFSC, para o app Nossa UFSC.
+Hoje: **Florianópolis (Trindade)** e **Blumenau** (sedes Salto do Norte e Velha).
 
-Fonte: tabela oficial do **Consórcio Fênix** (`consorciofenix.com.br/horarios`), páginas públicas.
-Roda todo dia no GitHub Actions; as mudanças aparecem no histórico de `data/linhas.json`.
+Fonte: a **API aberta do Bus2/Mobilibus** (`https://cdn.bus2.studio/api`), onde as operadoras publicam
+a programação oficial — é a mesma base do app Floripa no Ponto (Consórcio Fênix) e da tabela da BluMob.
+Roda todo dia no GitHub Actions; as mudanças aparecem no histórico de `data/<campus>.json`.
 
 ## Como funciona
 
-1. **Catálogo** — a página `/horarios` embute a lista de todas as linhas (~190).
-2. **Página de cada linha** — quadros de horários por tipo de dia (úteis / sábado / domingos e feriados) e por
-   aba de saída, marcas de elevador (`E`) e de horário previsto (`*`), e o itinerário rua a rua.
-3. **Filtro barato** — só segue quem tem rua do entorno do campus no itinerário (ou já passava no campus).
-4. **Mapa oficial** — o KML de cada sentido. Fica a linha cujo trajeto passa a **≤ 30 m** de algum ponto de ônibus
-   do campus (`src/data/pontos-campus.json`, vindo do OSM). Linha nova entra e linha extinta sai sozinhas.
-5. **Casamento saída ↔ trajeto** — para o app saber quando o ônibus de cada saída passa em cada ponto:
-   terminal onde o trajeto começa → circular que passa pelo terminal (distâncias recontadas a partir dele) →
-   nome do trajeto → eliminação. Toda saída precisa ficar ligada a um trajeto, senão a validação falha.
-6. **Validação** antes de gravar qualquer coisa (`src/lib/validate.ts`): horários em ordem (virando a meia-noite
-   no máximo uma vez), trajetos com desenho e dentro da região, ≥ 5 linhas no campus, no máximo 3 linhas
-   sumindo de uma vez, nenhuma linha perdendo mais de 60% dos horários. Se falhar, nada é gravado e o app
-   continua com o último dado bom.
-7. **Envio** — `POST {CONVEX_SITE_URL}/ingest/bus-lines` com `Authorization: Bearer {INGEST_API_KEY}` e o
-   snapshot inteiro (`DadosOnibus`, ver `src/lib/types.ts`).
+Para cada campus de `src/campi.ts` (hash do projeto da cidade no Bus2 + âncoras com raio):
 
-O que **não** vem do site e é calculado aqui:
+1. `routes` — todas as linhas da cidade.
+2. `timetable` de cada linha — sentidos, serviços (dias úteis / sábados / domingos, com **validade**),
+   partidas com a variante de trajeto (`seq`) e acessibilidade.
+3. `trip-details` de cada viagem-modelo — desenho oficial (polyline) e paradas com o **tempo oficial desde a
+   saída** (`int`, em segundos).
+4. Ponto do campus = parada a até `raioM` de uma âncora. Linha do campus = alguma viagem para num ponto
+   do campus. Linha nova entra e extinta sai sozinhas.
+5. Mapeamento para o formato v1 que o app lê (`src/lib/types.ts`, `src/lib/montar.ts`):
+   - sentido × variante → uma **origem** (aba de saída); o app liga horário ↔ trajeto por ela;
+   - serviços → um **Quadro** por tipo de dia — só o vigente hoje (ou o próximo, se nenhum estiver);
+   - viagem-modelo → **Trajeto** com os pontos do campus em ordem, `distanciaM` ao longo do desenho e
+     `segundos` oficiais (o app deve preferir `segundos` à estimativa por distância).
+6. **Validação** antes de gravar (`src/lib/validate.ts`): horários em ordem (uma virada de dia permitida —
+   o Madrugadão vai de 00:45 a 04:25), toda origem com trajeto, desenho com pontos e a < 80 km do campus,
+   ≥ 3 linhas e ≥ 1 ponto, no máximo 3 linhas sumindo de uma vez, nenhuma linha perdendo > 60% dos horários.
+   Se falhar, nada daquele campus é gravado nem enviado; os outros campi seguem.
+7. **Envio** — `POST {CONVEX_SITE_URL}/ingest/bus-lines`, um campus por vez, com o desenho cortado aos
+   trechos a ≤ 1,8 km do campus (documento do Convex: máx. 1 MB; a coleta recusa > 900 KB).
 
-- **Quando a linha mudou** — o "Alterada em" do site é sempre a data de hoje. Usamos um hash do conteúdo de
-  cada linha; `alteradaEm` é a primeira coleta em que o conteúdo atual apareceu.
-- **Feriados** — a tabela de operações especiais do site parou em 2019. `src/lib/feriados.ts` calcula os
-  feriados nacionais e de Florianópolis (operam como domingo) e as vésperas de Natal/Ano-Novo e a segunda de
-  Carnaval (operam como sábado), para o ano corrente e o seguinte.
-- **Horário em cada ponto** — o site só tem a saída do terminal. O snapshot traz a distância percorrida
-  da saída até cada ponto (`Trajeto.pontos[].distanciaM`); o app estima a passagem com uma velocidade média
-  por faixa horária e mostra como "previsto pela tabela".
+Calculado aqui (a fonte não tem):
+
+- **Quando a linha mudou** — hash do conteúdo; `alteradaEm` = primeira coleta com o conteúdo atual.
+- **Feriados** — as exceções da API vêm vazias; `src/lib/feriados.ts` calcula feriados nacionais e de
+  Florianópolis (operam como domingo) e vésperas de Natal/Ano-Novo e segunda de Carnaval (sábado).
+- **Link oficial** — Florianópolis aponta para a página da linha no site do Fênix; Blumenau, para a tabela
+  pública da BluMob.
 
 ## Rodar localmente
 
 ```bash
 bun install
-bun test                    # parsers e validação contra páginas reais salvas em test/fixtures
-bun src/index.ts --dry-run  # coleta e valida; não grava nada
-bun src/index.ts --skip-db  # grava data/linhas.json, sem enviar ao Convex
-bun src/index.ts            # grava e envia (precisa de CONVEX_SITE_URL e INGEST_API_KEY)
+bun test                             # mapeamento e validação contra respostas reais salvas em test/fixtures
+bun src/index.ts --dry-run           # todos os campi; coleta e valida, não grava nada
+bun src/index.ts blumenau --skip-db  # um campus; grava data/blumenau.json, sem enviar
+bun src/index.ts                     # grava e envia (precisa de CONVEX_SITE_URL e INGEST_API_KEY)
 ```
 
-Uma coleta faz ~215 requisições (4 em paralelo, com pausa) e leva ~2 min.
+Uma coleta faz ~1.400 requisições à API (6 em paralelo, cache de CDN) e leva ~1 min.
+
+### Novo campus
+
+Achar o projeto da cidade em `https://cdn.bus2.studio/api/projects`, pegar o `hash` em
+`project-details?v=2&project_id=<id>` e acrescentar em `src/campi.ts` com âncoras/raio cobrindo o campus.
+A `chave` tem de existir no enum `campus` do app. Araranguá (projeto 1034) existe no Bus2, mas só com 8
+linhas — a fonte completa lá é a Viação Cidade/Movitech.
 
 ## Workflows
 
@@ -55,10 +66,9 @@ Uma coleta faz ~215 requisições (4 em paralelo, com pausa) e leva ~2 min.
 | `keepalive.yml` | segunda 09:41 BRT | heartbeat em `data/keepalive.txt` |
 | `ci.yml` | push / PR | typecheck + testes |
 
-**Keep-alive:** o GitHub desativa workflows agendados após 60 dias sem atividade, e commits feitos com o
-`GITHUB_TOKEN` não contam. Por isso os commits usam uma **deploy key SSH** com escrita. A coleta commita
-`data/last-run.txt` e `data/last-status.txt` todo dia, mesmo quando falha, e o keep-alive semanal é a rede de
-segurança.
+**Keep-alive:** o GitHub desativa workflows agendados após 60 dias sem atividade, e commits do
+`GITHUB_TOKEN` não contam. Os commits usam uma **deploy key SSH** com escrita; a coleta commita
+`data/last-run.txt` e `data/last-status.txt` todo dia, mesmo quando falha.
 
 ### Secrets
 
@@ -70,10 +80,8 @@ segurança.
 
 Sem `CONVEX_SITE_URL`/`INGEST_API_KEY` a coleta roda, valida e commita o snapshot, só pula o envio.
 
-## Manutenção
+## Riscos
 
-- **Pontos do campus mudaram** (ponto novo/removido no OSM): `bun scripts/atualizar-pontos.ts` e commitar.
-- **Layout do site mudou**: a coleta falha na validação ou no parser, o app segue com o último dado bom.
-  Salvar a página nova em `test/fixtures/`, ajustar `src/lib/fenix.ts` até os testes passarem.
-- **Se o site bloquear os runners do GitHub** (aconteceu com os sites da UFSC nos cardápios): rodar
-  `bun src/index.ts` por cron no VPS, como o `cardapios-ufsc`.
+A API do Bus2 não é documentada: formato e endpoints podem mudar sem aviso. A validação e os testes
+existem para que isso apareça como falha do workflow (com o app mantendo o último dado bom), nunca como
+dado errado no app. Tempo real (`timetable-online`) existe na mesma API e fica para depois.

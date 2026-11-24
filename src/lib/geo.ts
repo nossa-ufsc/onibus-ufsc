@@ -73,3 +73,35 @@ export function simplificar(pts: LonLat[], tolM = 5): LonLat[] {
   }
   return pts.filter((_, i) => manter[i]).map(([lon, lat]) => [+lon.toFixed(6), +lat.toFixed(6)] as LonLat);
 }
+
+/**
+ * Distância ao longo da linha de cada ponto, na ordem em que a viagem para neles (monotônica: um
+ * ponto nunca "volta" para antes do anterior, o que resolve trajetos que passam duas vezes perto).
+ */
+export function distanciasEmOrdem(linha: LonLat[], pontos: LonLat[], raio = 80): (number | null)[] {
+  const seg: { a: XY; b: XY; ini: number; L: number }[] = [];
+  let acc = 0;
+  for (let i = 0; i < linha.length - 1; i++) {
+    const a = toXY(linha[i]), b = toXY(linha[i + 1]), L = dist(a, b);
+    seg.push({ a, b, ini: acc, L });
+    acc += L;
+  }
+  let minimo = 0;
+  return pontos.map((p) => {
+    const P = toXY(p);
+    let melhor: { d: number; lateral: number } | null = null;
+    for (const s of seg) {
+      if (s.ini + s.L < minimo - 1) continue;
+      const dx = s.b[0] - s.a[0], dy = s.b[1] - s.a[1];
+      const t = s.L ? Math.max(0, Math.min(1, ((P[0] - s.a[0]) * dx + (P[1] - s.a[1]) * dy) / (s.L * s.L))) : 0;
+      const lateral = dist(P, [s.a[0] + t * dx, s.a[1] + t * dy]);
+      const d = s.ini + t * s.L;
+      if (lateral <= raio && d >= minimo - 1 && (!melhor || lateral < melhor.lateral - 5)) melhor = { d, lateral };
+      // a primeira passagem boa já serve; não pula para uma passagem muito mais à frente
+      if (melhor && d > melhor.d + 400) break;
+    }
+    if (!melhor) return null;
+    minimo = melhor.d;
+    return melhor.d;
+  });
+}

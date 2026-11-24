@@ -1,7 +1,7 @@
 name: Coletar Ônibus
 
-# Todo dia: lê a tabela oficial do Consórcio Fênix, fica com as linhas que passam no campus
-# Trindade, valida e envia ao Convex (POST /ingest/bus-lines). No fim, commita o snapshot em
+# Todo dia: lê a programação oficial das operadoras na API aberta do Bus2/Mobilibus, fica com as
+# linhas que passam em cada campus (src/campi.ts), valida e envia ao Convex (POST /ingest/bus-lines). No fim, commita o snapshot em
 # data/ via deploy key SSH — o push com deploy key conta como atividade e impede o GitHub de
 # desabilitar os workflows agendados (regra dos 60 dias; commits do GITHUB_TOKEN NÃO contam).
 
@@ -44,13 +44,12 @@ jobs:
           git config user.name "onibus-ufsc-bot"
           git config user.email "onibus-ufsc-bot@users.noreply.github.com"
           # guarda o snapshot gerado e realinha na ponta da main a cada tentativa (sem rebase → sem conflito)
-          mkdir -p /tmp/novo && cp data/linhas.json data/mudancas.txt /tmp/novo/ 2>/dev/null || true
+          mkdir -p /tmp/novo && cp data/*.json data/mudancas.txt /tmp/novo/ 2>/dev/null || true
           for i in 1 2 3; do
             git fetch origin main
             git checkout -B main origin/main
             mkdir -p data
-            [ -e /tmp/novo/linhas.json ] && cp /tmp/novo/linhas.json data/linhas.json
-            [ -e /tmp/novo/mudancas.txt ] && cp /tmp/novo/mudancas.txt data/mudancas.txt
+            cp /tmp/novo/* data/ 2>/dev/null || true
             date -u +"%Y-%m-%dT%H:%M:%SZ" > data/last-run.txt
             echo "${{ steps.coleta.outcome }}" > data/last-status.txt
             git add data/
