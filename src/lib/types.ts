@@ -2,6 +2,8 @@
 // Fonte: API aberta do Bus2/Mobilibus (src/lib/bus2.ts), mapeada para o formato v1 que o app já lê.
 // Mudanças devem ser ADITIVAS: o app antigo continua lendo os campos que já existem.
 
+import type { ChaveCampus } from '../campi';
+
 /** Tipo de dia do quadro. Feriado opera como `domingo`. */
 export type TipoDia = 'util' | 'sabado' | 'domingo';
 
@@ -66,7 +68,7 @@ export interface Linha {
 export interface DadosOnibus {
   versao: 1;
   /** Campus do app (enum Campus do nossa-ufsc). */
-  campus: 'florianopolis' | 'blumenau';
+  campus: ChaveCampus;
   fonte: string;
   /** Quando a coleta rodou (ISO). */
   coletadoEm: string;

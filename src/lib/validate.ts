@@ -31,7 +31,8 @@ export function validarLinha(l: Linha, centro?: [number, number]): string[] {
     if (!ligadas.has(o)) erros.push(`${l.codigo}: saída "${o}" sem trajeto correspondente`);
   }
   for (const t of l.trajetos) {
-    if (t.coordenadas.length < 10) erros.push(`${l.codigo} ${t.nome}: trajeto com só ${t.coordenadas.length} pontos`);
+    // sem desenho é aceito (o ônibus interno de Curitibanos não tem percurso publicado); desenho truncado não
+    if (t.coordenadas.length > 0 && t.coordenadas.length < 10) erros.push(`${l.codigo} ${t.nome}: trajeto com só ${t.coordenadas.length} pontos`);
     // coordenada a mais de 80 km do campus = dado corrompido (ou lat/lon trocados)
     const fora = centro && t.coordenadas.some(([lon, lat]) => Math.hypot((lon - centro[0]) * 98_000, (lat - centro[1]) * 110_500) > 80_000);
     if (fora) erros.push(`${l.codigo} ${t.nome}: trajeto com coordenada a mais de 80 km do campus`);
@@ -44,7 +45,8 @@ export function validarContraAnterior(novo: DadosOnibus, anterior: DadosOnibus |
   const n = novo.pontos.length || 1;
   const centro: [number, number] = [novo.pontos.reduce((s, p) => s + p.lon, 0) / n, novo.pontos.reduce((s, p) => s + p.lat, 0) / n];
   const erros = novo.linhas.flatMap((l) => validarLinha(l, centro));
-  if (novo.linhas.length < 3) erros.push(`só ${novo.linhas.length} linhas passando no campus`);
+  // campus pequeno pode ter 1–2 linhas (Joinville, Curitibanos); queda brusca é pega pela comparação abaixo
+  if (!novo.linhas.length) erros.push('nenhuma linha passando no campus');
   if (!novo.pontos.length) erros.push('nenhum ponto de ônibus no campus');
   if (!anterior) return erros;
 

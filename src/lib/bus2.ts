@@ -63,8 +63,9 @@ export async function detalheViagem(viagem: string): Promise<DetalheViagem> {
   return d;
 }
 
-/** Polilinha codificada do Google (precisão 5) → [lon, lat]. */
-export function decodificar(s: string): LonLat[] {
+/** Polilinha codificada do Google → [lon, lat]. Bus2 usa precisão 5; o onibus.info, 6. */
+export function decodificar(s: string, precisao = 5): LonLat[] {
+  const f = 10 ** precisao;
   const out: LonLat[] = [];
   let i = 0, lat = 0, lon = 0;
   const num = () => {
@@ -79,7 +80,7 @@ export function decodificar(s: string): LonLat[] {
   while (i < s.length) {
     lat += num();
     lon += num();
-    out.push([lon / 1e5, lat / 1e5]);
+    out.push([lon / f, lat / f]);
   }
   return out;
 }

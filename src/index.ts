@@ -1,4 +1,4 @@
-// Coleta diária das linhas de ônibus que passam pelos campi (fonte: API aberta do Bus2/Mobilibus).
+// Coleta diária das linhas de ônibus que passam pelos campi (fontes oficiais; um coletor por fonte em src/fontes/).
 //
 //   bun src/index.ts                  todos os campi: coleta, valida, grava data/<campus>.json e envia ao Convex
 //   bun src/index.ts blumenau         só um campus
@@ -11,10 +11,11 @@
 import { existsSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import { CAMPI, type Campus } from './campi';
-import { rotas, tabela, detalheViagem, type DetalheViagem } from './lib/bus2';
-import { montarLinha, type PontoCampus } from './lib/montar';
-import { mapLimitado, fetchHtml } from './lib/http';
-import { BASE, parseCatalogo } from './lib/fenix';
+import type { Coletor } from './fontes/tipos';
+import { coletarBus2 } from './fontes/bus2';
+import { coletarOnibusInfo } from './fontes/onibusinfo';
+import { coletarMovitech } from './fontes/movitech';
+import { coletarCuritibanos } from './fontes/curitibanos';
 import { diasEspeciais } from './lib/feriados';
 import { enviarParaConvex } from './lib/convex';
 import { mudancas, validarContraAnterior } from './lib/validate';
@@ -31,40 +32,23 @@ function hashDe(l: Omit<Linha, 'hash' | 'alteradaEm'>): string {
   return h.digest('hex').slice(0, 16);
 }
 
-/** Florianópolis: link de cada linha para a página oficial do Fênix (o Bus2 não tem página pública por linha). */
-async function urlsFenix(): Promise<Map<string, string>> {
-  try {
-    return new Map(parseCatalogo(await fetchHtml(`${BASE}/horarios`)).map((x) => [x.codigo, x.url]));
-  } catch (e) {
-    console.error(`⚠ catálogo do Fênix indisponível (${(e as Error).message}); links genéricos`);
-    return new Map();
-  }
-}
+const COLETORES: Record<Campus['fonte']['tipo'], Coletor> = {
+  bus2: coletarBus2,
+  onibusinfo: coletarOnibusInfo,
+  movitech: coletarMovitech,
+  'ufsc-curitibanos': coletarCuritibanos,
+};
 
 async function coletar(c: Campus, agora: Date): Promise<{ dados: DadosOnibus; resumo: string } | null> {
   const arquivo = `data/${c.chave}.json`;
   const anterior: DadosOnibus | null = existsSync(arquivo) ? await Bun.file(arquivo).json() : null;
   const hoje = new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Sao_Paulo' }).format(agora); // AAAA-MM-DD
 
-  const rs = await rotas(c.projeto);
-  const tabelas = await mapLimitado(rs, 6, (r) => tabela(r.routeId), 80);
-  const viagens = [...new Set(tabelas.flatMap((t) => t?.trips.map((v) => v.tripId) ?? []))];
-  console.log(`[${c.chave}] ${rs.length} linhas, ${viagens.length} viagens-modelo`);
-  const detalhes = new Map<string, DetalheViagem>();
-  await mapLimitado(viagens, 6, async (id) => detalhes.set(id, await detalheViagem(id)), 80);
-
-  const urls = c.chave === 'florianopolis' ? await urlsFenix() : new Map<string, string>();
-  const pontos = new Map<string, PontoCampus>();
-  const linhas: Linha[] = [];
-  rs.forEach((r, i) => {
-    const t = tabelas[i];
-    if (!t || (c.ignorar && c.ignorar.test(r.shortName ?? ''))) return;
-    const m = montarLinha(c, r, t, detalhes, hoje, urls.get(r.shortName ?? ''));
-    if (!m) return;
-    for (const p of m.pontos) pontos.set(p.id, p);
-    const hash = hashDe(m.linha);
-    const antes = anterior?.linhas.find((l) => l.codigo === m.linha.codigo);
-    linhas.push({ ...m.linha, hash, alteradaEm: antes && antes.hash === hash ? antes.alteradaEm : agora.toISOString() });
+  const coleta = await COLETORES[c.fonte.tipo](c, hoje);
+  const linhas: Linha[] = coleta.linhas.map((l) => {
+    const hash = hashDe(l);
+    const antes = anterior?.linhas.find((x) => x.codigo === l.codigo);
+    return { ...l, hash, alteradaEm: antes && antes.hash === hash ? antes.alteradaEm : agora.toISOString() };
   });
   linhas.sort((a, b) => a.codigo.localeCompare(b.codigo, 'pt-BR', { numeric: true }));
 
@@ -74,8 +58,8 @@ async function coletar(c: Campus, agora: Date): Promise<{ dados: DadosOnibus; re
     campus: c.chave,
     fonte: c.fontePublica,
     coletadoEm: agora.toISOString(),
-    diasEspeciais: diasEspeciais([ano, ano + 1]),
-    pontos: [...pontos.values()].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
+    diasEspeciais: diasEspeciais([ano, ano + 1], c.feriadosMunicipais),
+    pontos: [...coleta.pontos].sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
     linhas,
   };
 

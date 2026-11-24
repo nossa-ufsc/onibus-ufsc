@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Programaçoes de Horários</title>
+    <script
+      type="text/javascript"
+      src="https://code.jquery.com/jquery-3.7.1.min.js"
+    ></script>
+    <link
+      href="//cdn.datatables.net/2.0.8/css/dataTables.dataTables.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.datatables.net/2.0.8/css/dataTables.dataTables.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.datatables.net/buttons/3.0.2/css/buttons.dataTables.css"
+    />
+    <script
+      type="text/javascript"
+      src="//cdn.datatables.net/2.0.8/js/dataTables.min.js"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css"
+      integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+      crossorigin="anonymous"
+    />
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js"
+      integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/dataTables.buttons.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.dataTables.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/3.0.2/js/buttons.print.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+    <script src="/public/javascript/global.js"></script>
+    <script src="/public/javascript/datagrid.js"></script>
+    <script src="/public/javascript/ajax.js"></script>
+    <script src="/js/select2/js/select2.min.js"></script>
+    <script src="/js/parsley.min.js"></script>
+    <script src="/js/parsley.pt-br.js"></script>
+    <script src="/js/gmaps.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsts@latest/dist/jsts.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?libraries=drawing,places,geometry&key=AIzaSyCJVTqaY5WMCa3wqTJZ2rsPsBiMuYgl1S4"></script>
+    <script src="/js/qrious.min.js"></script>
+    <link rel="icon" type="image/x-icon" href="/public/favicon.ico" />
+    <link href="/public/css/global.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div id="datagrid" class="table-responsive">
+      <table
+        id="schedules-table"
+        class="table table-striped display"
+        style="width: 100%"
+      >
+        <thead class="thead-dark">
+          <tr>
+            <th>ID</th>
+            <th>Horário</th>
+            <th>Itinerário</th>
+            <th>Trajeto Padrão</th>
+            <th>Dias de Operação</th>
+            <th>Locais Passados</th>
+          </tr>
+        </thead>
+        <tbody>
+          
+          <tr>
+            <td>56</td>
+            <td>05:45</td>
+            <td>
+              69A - Centro/ Viaduto/S. Toca/Costa Da Lagoa
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>158</td>
+            <td>05:45</td>
+            <td>
+              93D - Centro / Sanga Da Toca 1
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Av Sete De Setembro, Florestal, Frente Da Benoit, Havan, Igreja Matriz, Policia Rodoviaria, Terminal Centro</td>
+          </tr>
+          
+          <tr>
+            <td>26</td>
+            <td>05:50</td>
+            <td>
+              38A - Centro/ Morro Dos Conventos
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>83</td>
+            <td>06:00</td>
+            <td>
+              51A - C.m.luzia / T.centro / Manha
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Barro Vermelho, Campo Mãe Luzia, Hercilio Luz, Ilhas, Morro Agudo, Rio Dos Anjos, Sanga Do Marco</td>
+          </tr>
+          
+          <tr>
+            <td>150</td>
+            <td>06:00</td>
+            <td>
+              54I - T.centro/ S.toca (br101)
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>63</td>
+            <td>06:10</td>
+            <td>
+              93A - Sg. Da Toca 1/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Florestal, Fr A Farmacia, Frente Da Havan, Fr Roda Livre Bike, Mercado Pereira</td>
+          </tr>
+          
+          <tr>
+            <td>176</td>
+            <td>06:14</td>
+            <td>
+              38O - T. Centro / Morro Dos Conv.
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>29</td>
+            <td>06:20</td>
+            <td>
+              38D - Morro Dos Conventos/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Coloninha</td>
+          </tr>
+          
+          <tr>
+            <td>166</td>
+            <td>06:20</td>
+            <td>
+              46D - Itoupaba/Operaria/Jd Cibeli/ Centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Combo, Estrada Geral – Itoupaba, Fazendo Bauer, Fr Do Colegio Da Operaria, Giassi C Alta, Industrial, Jardim Cibele, Pizzaria Help, Shopping, Terminal Centro</td>
+          </tr>
+          
+          <tr>
+            <td>147</td>
+            <td>06:21</td>
+            <td>
+              38L - Lagoa/ Morro/Escolar
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>43</td>
+            <td>06:29</td>
+            <td>
+              55A - T.centro/ Santa Catarina /Sg.areia/ Fundo Grande
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Fundo Grande, Sanga Da Areia</td>
+          </tr>
+          
+          <tr>
+            <td>52</td>
+            <td>06:29</td>
+            <td>
+              54C - Sanga Toca/ Soares/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>34</td>
+            <td>06:30</td>
+            <td>
+              48A - T.centro/ Sta Rosa De Lima
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>46</td>
+            <td>06:30</td>
+            <td>
+              52A - T.centro/ Sanga Da Toca (ab)
+            </td>
+            <td>Sim</td>
+            <td>Sábado</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>57</td>
+            <td>06:30</td>
+            <td>
+              69B - Costa Da Lagoa/ Sg. Toca/ Cen
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>62</td>
+            <td>06:30</td>
+            <td>
+              92C - Centro / Caverazinho
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>165</td>
+            <td>06:39</td>
+            <td>
+              38R - Morro/Canjica/Manhoso/Lg Serra/Centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Entrada Do Manhoso, Escola Caic, Estrada Geral Canjica , Estrada Geral – Lagoa Da Serra, Frente Do Abimar, Giassi Centro, Posto De Saude Morro Dos Conventos, Posto Rizoto Abimar, Rodovia Valmiro Manoel Gonçalves, Rua Amaro Jose Pereira, Rua Das Palmeiras, Rua Governador Jorge Lacerda, Terminal Centro</td>
+          </tr>
+          
+          <tr>
+            <td>46</td>
+            <td>06:40</td>
+            <td>
+              52A - T.centro/ Sanga Da Toca (ab)
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>47</td>
+            <td>06:41</td>
+            <td>
+              52B - Sanga Da Toca/ T.centro (ab)
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>26</td>
+            <td>06:45</td>
+            <td>
+              38A - Centro/ Morro Dos Conventos
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sábado</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>61</td>
+            <td>06:50</td>
+            <td>
+              92B - Caverazinho/ Coloninha/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>32</td>
+            <td>06:55</td>
+            <td>
+              47A - T.centro/ Jd Cibeli
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>35</td>
+            <td>07:00</td>
+            <td>
+              48B - Sta Rosa De Lima/ Hospital/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>39</td>
+            <td>07:00</td>
+            <td>
+              49A - T.centro/ Lagoao
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>144</td>
+            <td>07:00</td>
+            <td>
+              52F - S.toca/ Jd Cibeli/ Lagoao/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Sábado</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>24</td>
+            <td>07:05</td>
+            <td>
+              36A - Centro/ Lagoao/ Divineia M
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Frente Do Abimar, Lagoao, Nova Divineia, Rua Turvo, Urussanguinha</td>
+          </tr>
+          
+          <tr>
+            <td>33</td>
+            <td>07:10</td>
+            <td>
+              47B - Jardim Cibeli/ Centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>29</td>
+            <td>07:15</td>
+            <td>
+              38D - Morro Dos Conventos/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Sábado</td>
+            <td>Coloninha</td>
+          </tr>
+          
+          <tr>
+            <td>44</td>
+            <td>07:15</td>
+            <td>
+              55B - Fundo Grande/Sanga Da Areia/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Fundo Grande, Sanga Da Areia</td>
+          </tr>
+          
+          <tr>
+            <td>47</td>
+            <td>07:15</td>
+            <td>
+              52B - Sanga Da Toca/ T.centro (ab)
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>146</td>
+            <td>07:15</td>
+            <td>
+              38J - Morro/ Paiquere/ Lagoa/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>41</td>
+            <td>07:20</td>
+            <td>
+              49C - Lagoao/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>99</td>
+            <td>07:30</td>
+            <td>
+              52M - Centro/ S.toca/ Casa Chaves
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Sanga Da Toca</td>
+          </tr>
+          
+          <tr>
+            <td>25</td>
+            <td>07:31</td>
+            <td>
+              36B - Lagoao/ Divineia/Urussang./ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>100</td>
+            <td>08:20</td>
+            <td>
+              52N - Casa Chaves/ S.toca/ Centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Sanga Da Toca</td>
+          </tr>
+          
+          <tr>
+            <td>48</td>
+            <td>10:00</td>
+            <td>
+              53A - T.centro/ Sg Toca (sete)
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>26</td>
+            <td>10:15</td>
+            <td>
+              38A - Centro/ Morro Dos Conventos
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>29</td>
+            <td>11:00</td>
+            <td>
+              38D - Morro Dos Conventos/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Coloninha</td>
+          </tr>
+          
+          <tr>
+            <td>49</td>
+            <td>11:00</td>
+            <td>
+              53B - Sanga Da Toca/ T.centro (sete)
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>46</td>
+            <td>11:30</td>
+            <td>
+              52A - T.centro/ Sanga Da Toca (ab)
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>45</td>
+            <td>11:50</td>
+            <td>
+              50C - T.centro/ Sg Areia (sete)
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Sanga Da Areia</td>
+          </tr>
+          
+          <tr>
+            <td>27</td>
+            <td>12:10</td>
+            <td>
+              38B - T.centro/ Lagoa/ Manhoso/ Canjica/ Morro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Canjiquinha, Lagoa Da Serra, Manhoso, Morro Dos Conventos</td>
+          </tr>
+          
+          <tr>
+            <td>30</td>
+            <td>12:10</td>
+            <td>
+              46E - Centro/ Jd Cibeli/ Itoupaba Md
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>60</td>
+            <td>12:10</td>
+            <td>
+              92A - T.centro/Coloninha/Caverazinho
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>97</td>
+            <td>12:10</td>
+            <td>
+              55C - Centro/ S.areia / Fundo Grande
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Fundo Grande, Sanga Da Areia</td>
+          </tr>
+          
+          <tr>
+            <td>145</td>
+            <td>12:10</td>
+            <td>
+              52G - T.centro/ Lagoao/ Jd Cibeli/ S Toca
+            </td>
+            <td>Sim</td>
+            <td>Sábado</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>47</td>
+            <td>12:11</td>
+            <td>
+              52B - Sanga Da Toca/ T.centro (ab)
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>40</td>
+            <td>12:12</td>
+            <td>
+              49B - T.centro/ Lagoao/ Mamonas
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>58</td>
+            <td>12:12</td>
+            <td>
+              69C - Centro/Sanga Toca/ Costa Da Lagoa
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>34</td>
+            <td>12:14</td>
+            <td>
+              48A - T.centro/ Sta Rosa De Lima
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>51</td>
+            <td>12:14</td>
+            <td>
+              54B - T.centro/ Jd Cibeli/ Soares/ Sg Toca
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>26</td>
+            <td>12:15</td>
+            <td>
+              38A - Centro/ Morro Dos Conventos
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sábado</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>37</td>
+            <td>12:15</td>
+            <td>
+              42A - T.centro/ Hospital
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>82</td>
+            <td>12:15</td>
+            <td>
+              51B - T.centro / C.m.luzia / Md
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Barro Vermelho, Campo Mãe Luzia, Hercilio Luz, Ilhas, Morro Agudo, Rio Dos Anjos, Sanga Do Marco</td>
+          </tr>
+          
+          <tr>
+            <td>114</td>
+            <td>12:15</td>
+            <td>
+              36D - Centro/Urus/Divineia Meio Dia
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>38</td>
+            <td>12:30</td>
+            <td>
+              42B - Hospital/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>42</td>
+            <td>12:30</td>
+            <td>
+              49D - Mamonas/ Lagoao/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>132</td>
+            <td>12:30</td>
+            <td>
+              50D - Sg Areia/ T.centro (sete)
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Sanga Da Areia</td>
+          </tr>
+          
+          <tr>
+            <td>159</td>
+            <td>12:45</td>
+            <td>
+              47E - Escolar Jardim Cibeli
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Combo, Fr Do Colegio Da Operaria, Jardim Cibele, Padaria Da Familia</td>
+          </tr>
+          
+          <tr>
+            <td>98</td>
+            <td>12:50</td>
+            <td>
+              55D - S.areia/ Fundo Grande/ Centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Fundo Grande, Sanga Da Areia</td>
+          </tr>
+          
+          <tr>
+            <td>29</td>
+            <td>13:00</td>
+            <td>
+              38D - Morro Dos Conventos/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Sábado</td>
+            <td>Coloninha</td>
+          </tr>
+          
+          <tr>
+            <td>31</td>
+            <td>13:00</td>
+            <td>
+              46B - Itoupaba/ Jd Cibeli/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>36</td>
+            <td>13:00</td>
+            <td>
+              48C - Sta Rosa De Lima/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>47</td>
+            <td>13:00</td>
+            <td>
+              52B - Sanga Da Toca/ T.centro (ab)
+            </td>
+            <td>Sim</td>
+            <td>Sábado</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>120</td>
+            <td>13:00</td>
+            <td>
+              92D - Caverazinho/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>133</td>
+            <td>13:00</td>
+            <td>
+              69E - Costa Da Lagoa/ Sanga Toca/ Centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Costa Da Lagoa, Sanga Da Areia, Sanga Da Toca</td>
+          </tr>
+          
+          <tr>
+            <td>53</td>
+            <td>13:05</td>
+            <td>
+              54D - Sanga Toca/ Soares/ Cibeli/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>78</td>
+            <td>13:15</td>
+            <td>
+              38E - Morro/ Canjica/ Manhoso/ Lagoa/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Canjiquinha, Centro, Lagoa Da Serra, Manhoso, Morro Dos Conventos</td>
+          </tr>
+          
+          <tr>
+            <td>172</td>
+            <td>13:15</td>
+            <td>
+              36E - Divineia/Centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>29</td>
+            <td>13:30</td>
+            <td>
+              38D - Morro Dos Conventos/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Coloninha</td>
+          </tr>
+          
+          <tr>
+            <td>84</td>
+            <td>13:45</td>
+            <td>
+              51C - C.m.luzia / T.centro/ Tarde
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Barro Vermelho, Campo Mãe Luzia, Hercilio Luz, Ilhas, Morro Agudo, Rio Dos Anjos</td>
+          </tr>
+          
+          <tr>
+            <td>48</td>
+            <td>15:00</td>
+            <td>
+              53A - T.centro/ Sg Toca (sete)
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>49</td>
+            <td>15:40</td>
+            <td>
+              53B - Sanga Da Toca/ T.centro (sete)
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>26</td>
+            <td>16:00</td>
+            <td>
+              38A - Centro/ Morro Dos Conventos
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>164</td>
+            <td>16:30</td>
+            <td>
+              42C - Hospital Regional Escolar
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Arapongas, Avenida Getulio Vargas, Centro, Escola Caic</td>
+          </tr>
+          
+          <tr>
+            <td>29</td>
+            <td>17:05</td>
+            <td>
+              38D - Morro Dos Conventos/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Coloninha</td>
+          </tr>
+          
+          <tr>
+            <td>40</td>
+            <td>17:10</td>
+            <td>
+              49B - T.centro/ Lagoao/ Mamonas
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>124</td>
+            <td>17:10</td>
+            <td>
+              54G - T.centro/S.areia/Soares/Sg Toca
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Sanga Da Toca</td>
+          </tr>
+          
+          <tr>
+            <td>125</td>
+            <td>17:11</td>
+            <td>
+              47C - T.centro/ Jd Cibeli/ S.areia
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Jardim Cibele, Sanga Da Areia</td>
+          </tr>
+          
+          <tr>
+            <td>59</td>
+            <td>17:12</td>
+            <td>
+              69D - T.centro/Sanga Da Toca/ Costa Da Lagoa
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>177</td>
+            <td>17:15</td>
+            <td>
+              38P - Centro/Lagoa/Morro/Escolar
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>42</td>
+            <td>17:30</td>
+            <td>
+              49D - Mamonas/ Lagoao/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>53</td>
+            <td>17:45</td>
+            <td>
+              54D - Sanga Toca/ Soares/ Cibeli/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>126</td>
+            <td>17:46</td>
+            <td>
+              47D - S.areia/ Centro (jd Cibeli)
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Jardim Cibeli , Sanga Da Areia</td>
+          </tr>
+          
+          <tr>
+            <td>167</td>
+            <td>18:00</td>
+            <td>
+              69F - C. Lagoa/Sg. Da Toca/T. Centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>156</td>
+            <td>18:10</td>
+            <td>
+              93C - Centro/Sanga Da Toca 1 / Centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Br 101 Marginal, Centro, Combo, Florestal, Frente Da Havan, Pizzaria Help, Shopping, Terminal Centro</td>
+          </tr>
+          
+          <tr>
+            <td>168</td>
+            <td>18:10</td>
+            <td>
+              46F - Centro/Jd. Cibeli/Itoupaba N
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>40</td>
+            <td>18:15</td>
+            <td>
+              49B - T.centro/ Lagoao/ Mamonas
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>46</td>
+            <td>18:15</td>
+            <td>
+              52A - T.centro/ Sanga Da Toca (ab)
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>85</td>
+            <td>18:15</td>
+            <td>
+              51D - T.centro/ C. M. Luzia / Noite
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Barro Vermelho, Campo Mãe Luzia, Hercilio Luz, Ilhas, Morro Agudo, Rio Dos Anjos</td>
+          </tr>
+          
+          <tr>
+            <td>119</td>
+            <td>18:15</td>
+            <td>
+              38G - Morro Dos Conventos/ Ufsc/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>148</td>
+            <td>18:16</td>
+            <td>
+              38M - T.centro/ Morro/ Paiquere
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>42</td>
+            <td>18:30</td>
+            <td>
+              49D - Mamonas/ Lagoao/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>29</td>
+            <td>18:45</td>
+            <td>
+              38D - Morro Dos Conventos/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Coloninha</td>
+          </tr>
+          
+          <tr>
+            <td>63</td>
+            <td>18:50</td>
+            <td>
+              93A - Sg. Da Toca 1/ T.centro
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td>Florestal, Fr A Farmacia, Frente Da Havan, Fr Roda Livre Bike, Mercado Pereira</td>
+          </tr>
+          
+          <tr>
+            <td>47</td>
+            <td>19:00</td>
+            <td>
+              52B - Sanga Da Toca/ T.centro (ab)
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>46</td>
+            <td>22:15</td>
+            <td>
+              52A - T.centro/ Sanga Da Toca (ab)
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>26</td>
+            <td>22:20</td>
+            <td>
+              38A - Centro/ Morro Dos Conventos
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+          <tr>
+            <td>134</td>
+            <td>22:50</td>
+            <td>
+              38H - Morro/ Garagem Expresso
+            </td>
+            <td>Sim</td>
+            <td>Segunda-feira à Sexta-feira</td>
+            <td></td>
+          </tr>
+          
+        </tbody>
+      </table>
+      <div class="message">
+        <span>Esse itinerário não possui mapa</span>
+      </div>
+    </div>
+    <div id="div-map" style="display: none;">
+      <div id="map"></div>
+      <div class="side-bar" style="display: none">
+        <h3>Paradas</h3>
+        <ul id="schedules" class="timeline"></ul>
+      </div>
+    </div>
+    <!-- prettier-ignore -->
+    <script>(g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})
+      ({key: "AIzaSyCJVTqaY5WMCa3wqTJZ2rsPsBiMuYgl1S4", v: "weekly"});</script>
+    <script>
+      $(document).ready(function () {
+        const token = "6uRGNtzs-DWHllBbFihXkANE8-kAdbZnbIfI";
+        let table = createDatagrid();
+
+        let messageTimeOut;
+
+        $("#schedules-table tbody").on("click", "tr", function () {
+          const data = table.row(this).data();
+          if (data[3] === "Não") {
+            $(".message").fadeIn();
+            if (messageTimeOut) clearTimeout(messageTimeOut);
+            messageTimeOut = setTimeout(() => {
+              $(".message").fadeOut();
+            }, 3000);
+            return;
+          }
+          $("#datagrid").fadeOut();
+          getMap(data[0], data[1]);
+        });
+
+        let map;
+        let polyline;
+        let busStops = [];
+        let infoWindow;
+        let onlineInterval;
+        let bus;
+        let actualSelected;
+        let schedules = [];
+        let sequenceSchedule = [];
+        let currentSequenceBusStop = 0;
+        let path = [];
+        let alreadyCompleted = [];
+
+        async function initMap() {
+          $("#div-map").height(window.innerHeight);
+          $(".side-bar").show();
+          const { Map } = await google.maps.importLibrary("maps");
+          map = new Map(document.getElementById("map"), {
+            center: { lat: -34.397, lng: 150.644 },
+            zoom: 8,
+          });
+          infoWindow = new google.maps.InfoWindow();
+          const centerControlDiv = document.createElement("div");
+          const centerControl = createControl();
+          centerControl.addEventListener("click", () => {
+            clearInterval(onlineInterval);
+            bus?.setMap(null);
+            bus = undefined;
+            $("#div-map").fadeOut();
+            setTimeout(() => $("#datagrid").fadeIn(), 300);
+          });
+          const bottonControlDiv = document.createElement("div");
+          const bottonControl = createLabel();
+          centerControlDiv.appendChild(centerControl);
+          bottonControlDiv.appendChild(bottonControl);
+          map.controls[google.maps.ControlPosition.TOP_LEFT].push(
+            centerControlDiv
+          );
+          map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(
+            bottonControlDiv
+          );
+        }
+
+        async function findClosestSequence(sequenceSchedule, lat, lng) {
+          closestPoint = 0;
+          closestDistance = Infinity;
+          for (point of sequenceSchedule) {
+            distance = calculateHaversineDistance(
+              lat,
+              lng,
+              point["lat"],
+              point["long"]
+            );
+            if (distance < closestDistance) {
+              closestDistance = distance;
+              closestPoint = point["sequence"];
+            }
+          }
+          return closestPoint;
+        }
+
+        function marcarPorProximidade(busPosition) {
+          let shorterDistance = Infinity;
+          let shorterPoint = undefined;
+          for (const point of path) {
+            const distance = calculateHaversineDistance(
+              point.lat,
+              point.lng,
+              busPosition.lat,
+              busPosition.lng
+            );
+            if (shorterDistance > distance) {
+              shorterDistance = distance;
+              shorterPoint = point;
+            }
+          }
+          if (!shorterPoint) return [];
+          const schedulesToComplete = schedules.filter(
+            (schedule) => schedule.sequencia <= shorterPoint.sequencia
+          );
+          for (const schedule of schedulesToComplete) {
+            const className = `.${schedule.hour}-${schedule.minute}`;
+            $(className).addClass("completed");
+          }
+          return schedulesToComplete;
+        }
+
+        async function findClosestStops(locations, busStops) {
+          result = [];
+          lastSequence = 0;
+          for (const location of locations) {
+            let closestStop = null;
+            for (const busStop of busStops) {
+              const distance = calculateHaversineDistance(
+                location.latitude,
+                location.longitude,
+                busStop.location.latitude,
+                busStop.location.longitude
+              );
+              if (distance < 20) {
+                closestStop = busStop;
+              }
+              if (closestStop != null) {
+                lastSequence = closestStop.sequence;
+              }
+              result.push({
+                lat: location.latitude,
+                long: location.longitude,
+                sequence: lastSequence,
+              });
+            }
+          }
+          return result;
+        }
+
+        function getOnlineTrack(standardRouteId, busSchedule, token) {
+          return async () => {
+            try {
+              const result = await getBus(standardRouteId, busSchedule, token);
+              if (!result?.point) {
+                bus?.setMap(null);
+                return;
+              }
+              const { point } = result;
+              currentSequenceBusStop = await findClosestSequence(
+                sequenceSchedule,
+                point.latitude,
+                point.longitude
+              );
+              const busPosition = {
+                lat: point.latitude,
+                lng: point.longitude,
+              };
+              const alreadyComplited = [];
+              for (const schedule of schedules) {
+                if (schedule.sequence > currentSequenceBusStop) continue;
+                const className = `.${schedule.hour}-${schedule.minute}`;
+                $(className).addClass("completed");
+                alreadyComplited.push(schedule);
+              }
+              for (const schedule of alreadyComplited)
+                schedules.destroy(schedule);
+              if (bus) {
+                return bus.setPosition(busPosition);
+              }
+              const isBusGreenIcon = point.icon === "bus-icon-green";
+              let online = isBusGreenIcon;
+              if (!bus) {
+                bus = makeBusMarker(
+                  busPosition,
+                  map,
+                  point.vehicle_prefix,
+                  point.icon
+                );
+              } else {
+                bus.setPosition(busPosition);
+                bus.setIcon({
+                  url: "public/images/" + point.icon + ".png",
+                  scaledSize: new google.maps.Size(32, 44),
+                  anchor: new google.maps.Point(16, 22),
+                  labelOrigin: new google.maps.Point(16, 22),
+                });
+              }
+              if (online) {
+                alreadyCompleted = marcarPorProximidade(busPosition);
+              } else {
+                const now = new Date();
+                const [time, date] = now.format().split(" ");
+                const [hour, minute, second] = time.split(":");
+
+                for (const schedule of schedules) {
+                  const checkHour = schedule.hour < hour;
+                  const ckeckMinute =
+                    schedule.hour == hour && schedule.minute < minute;
+                  if (!checkHour && !ckeckMinute) break;
+                  const className = `.${schedule.hour}-${schedule.minute}`;
+                  $(className).addClass("completed");
+                  alreadyComplited.push(schedule);
+                }
+              }
+            } catch (e) {
+              console.error("Error fetching bus data:", e);
+              clearInterval(onlineInterval);
+            }
+          };
+        }
+
+        async function getMap(standardRouteId, schedule) {
+          if (!map) await initMap();
+          $("#schedules").empty();
+          bus?.setMap(null);
+          const now = new Date();
+          const baseDate = new Date(
+            `${now.toISOString().split("T")[0]} ${schedule}:00`
+          );
+          schedules = [];
+          try {
+            const result = await getStandardRoute(standardRouteId, token);
+            sequenceSchedule = await findClosestStops(
+              result.data.route,
+              result.data.bus_stops
+            );
+            onlineInterval = setInterval(
+              getOnlineTrack(standardRouteId, schedule, token),
+              3000
+            );
+            
+            const path = result.data.route.map((point) => {
+              return { lat: point.latitude, lng: point.longitude };
+            });
+            if (polyline) polyline.setMap(null);
+            polyline = makePolyline(map, path);
+            for (const busStop of busStops) busStop.setMap(null);
+            busStops = [];
+            for (const busStop of result.data.bus_stops) {
+              const busStopPosition = {
+                lat: busStop.location.latitude,
+                lng: busStop.location.longitude
+              }
+              const marker = createBusStopMarker(busStopPosition, map, busStop.description);
+              marker.addListener("mouseover", function () {
+                getContent(busStop, infoWindow);
+                infoWindow.open(map, this);
+              });
+              marker.addListener("mouseout", () => {
+                infoWindow.close();
+              });
+              busStops.push(marker);
+              const { hour, minute } = updateBusSchedule(busStop, baseDate);
+              schedules.push({ hour, minute, sequence: busStop.sequence });
+              const li = $(
+                `<li class="clickable ${hour}-${minute}">${hour}:${minute} - ${busStop.street}</li>`
+              );
+              li.click((e) => {
+                actualSelected?.setIcon({
+                  url: "/public/images/marker.png",
+                });
+                actualSelected = marker;
+                getContent(busStop, infoWindow);
+                infoWindow.open(map, marker);
+                marker.setIcon({
+                  url: "/public/images/marker-outline.png",
+                });
+                setTimeout(function () {
+                  marker.setIcon({
+                    url: "/public/images/marker.png",
+                  });
+                }, 10000);
+              });
+              $("#schedules").append(li);
+            }
+            setTimeout(function () {
+              $('#div-map').fadeIn();
+              zoomToObject(polyline, map);
+            }, 300);
+            setTimeout(
+              () =>
+                $("#label").text(
+                  `${result.data.itinerary_prefix} - ${result.data.itinerary_description}`
+                ),
+              1000
+            );
+          } catch (e) {
+            console.error(e);
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -12,5 +12,8 @@
     "test": "bun test",
     "typecheck": "tsc --noEmit"
   },
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "unpdf": "^2.2.2"
+  }
 }

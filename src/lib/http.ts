@@ -50,3 +50,25 @@ export async function mapLimitado<T, R>(
   await Promise.all(Array.from({ length: Math.min(limite, itens.length) }, trabalhador));
   return out;
 }
+
+/** GET de JSON com retry nos erros transitórios. `[]`/`{}` vazios são respostas válidas. */
+export async function fetchJson<T>(url: string, headers: Record<string, string> = {}): Promise<T> {
+  let ultimoErro: unknown;
+  for (let tentativa = 1; tentativa <= TENTATIVAS; tentativa++) {
+    try {
+      const res = await fetch(url, {
+        headers: { 'User-Agent': BROWSER_UA, Accept: 'application/json', ...headers },
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      });
+      if (res.ok) return (await res.json()) as T;
+      const erro = new Error(`GET ${url} -> HTTP ${res.status}`);
+      if (res.status < 500 && res.status !== 429) throw Object.assign(erro, { definitivo: true });
+      ultimoErro = erro;
+    } catch (e) {
+      if ((e as { definitivo?: boolean }).definitivo) throw e;
+      ultimoErro = e;
+    }
+    if (tentativa < TENTATIVAS) await Bun.sleep(3_000 * tentativa);
+  }
+  throw ultimoErro instanceof Error ? ultimoErro : new Error(String(ultimoErro));
+}

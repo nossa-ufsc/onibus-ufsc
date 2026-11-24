@@ -1,6 +1,6 @@
 // Dias em que o transporte opera com outro quadro. O site do Fênix tem uma tabela disso
-// (OPERACOES), mas ela parou em 2019 — então calculamos: feriados nacionais e de Florianópolis
-// rodam como domingo; vésperas de Natal/Ano-Novo e segunda de Carnaval rodam como sábado
+// (OPERACOES), mas ela parou em 2019 — então calculamos: feriados nacionais e os municipais de cada
+// campus (src/campi.ts) rodam como domingo; vésperas de Natal/Ano-Novo e segunda de Carnaval rodam como sábado
 // (padrão que aparece na própria tabela antiga do Fênix).
 
 import type { TipoDia } from './types';
@@ -17,14 +17,15 @@ function pascoa(ano: number): Date {
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 const somaDias = (d: Date, n: number) => new Date(d.getTime() + n * 86_400_000);
 
-export function diasEspeciais(anos: number[]): Record<string, TipoDia> {
+export function diasEspeciais(anos: number[], municipais: string[] = []): Record<string, TipoDia> {
   const out: Record<string, TipoDia> = {};
   for (const ano of anos) {
     const fixos: [string, TipoDia][] = [
-      ['01-01', 'domingo'], ['03-23', 'domingo'] /* aniversário de Florianópolis */, ['04-21', 'domingo'],
+      ['01-01', 'domingo'], ['04-21', 'domingo'],
       ['05-01', 'domingo'], ['09-07', 'domingo'], ['10-12', 'domingo'], ['11-02', 'domingo'],
       ['11-15', 'domingo'], ['11-20', 'domingo'], ['12-25', 'domingo'],
       ['12-24', 'sabado'], ['12-31', 'sabado'],
+      ...municipais.map((md): [string, TipoDia] => [md, 'domingo']),
     ];
     for (const [md, tipo] of fixos) out[`${ano}-${md}`] = tipo;
     const p = pascoa(ano);

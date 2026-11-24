@@ -6,20 +6,15 @@
 //   viagem-modelo da variante (trip-details)  →  Trajeto: desenho, comprimento e paradas do campus
 //     com distância ao longo do desenho e o tempo OFICIAL desde a saída (`segundos`)
 
-import { comprimento, distLL, distanciasEmOrdem, simplificar, type LonLat } from './geo';
+import { comprimento, distanciasEmOrdem, simplificar, type LonLat } from './geo';
 import { decodificar, type DetalheViagem, type Rota, type Servico, type Tabela } from './bus2';
+import { itinerarioDeNomes, limpa, noCampus, ordemHora } from './comum';
 import type { Campus } from '../campi';
+import type { PontoCampus } from '../fontes/tipos';
 import type { Linha, Quadro, TipoDia, Trajeto } from './types';
-
-export type PontoCampus = { id: string; nome: string; lat: number; lon: number };
 
 const TERMINAIS = ['TICEN', 'TITRI', 'TICAN', 'TILAG', 'TIRIO', 'TISAN', 'TIJOR'];
 const terminalDe = (s: string) => TERMINAIS.find((t) => s.toUpperCase().includes(t)) ?? null;
-const limpa = (s: string) => s.replace(/\s+/g, ' ').trim();
-
-export function noCampus(c: Campus, lat: number, lon: number): boolean {
-  return c.ancoras.some((a) => distLL([lon, lat], [a.lon, a.lat]) <= a.raioM);
-}
 
 /** Tipos de dia que um serviço cobre (dias = [dom, seg, …, sáb]). */
 function tiposDia(s: Servico): TipoDia[] {
@@ -49,15 +44,6 @@ function vigentes(servicos: Servico[], hoje: string): Map<TipoDia, Servico[]> {
   return out;
 }
 
-/** Ruas por onde a viagem passa, a partir dos nomes das paradas ("Rua X, 120" → "Rua X"). */
-function itinerario(d: DetalheViagem): string[] {
-  const out: string[] = [];
-  for (const p of d.stops) {
-    const rua = limpa(p.name.replace(/,.*$/, '').replace(/\s+-\s+.*$/, '').replace(/\s+\d+[\w-]*$/, ''));
-    if (rua && out[out.length - 1] !== rua) out.push(rua);
-  }
-  return out;
-}
 
 export function montarLinha(
   campus: Campus,
@@ -96,7 +82,7 @@ export function montarLinha(
           .map(({ p, d }) => ({ pontoId: p.stopId, distanciaM: Math.round(d ?? 0), segundos: p.int })),
       });
       for (const p of doCampus) pontos.set(p.stopId, { id: p.stopId, nome: limpa(p.name), lat: p.lat, lon: p.lng });
-      if (!itin.length) itin = itinerario(det);
+      if (!itin.length) itin = itinerarioDeNomes(det.stops.map((p) => p.name));
 
       for (const [tipoDia, servs] of porSeq) {
         // ordem publicada pela operadora (o Madrugadão atravessa a noite: 00:45 … 04:25); só reordena
@@ -105,7 +91,7 @@ export function montarLinha(
           .flatMap((s) => s.departures)
           .filter((d) => d.seq === v.seq)
           .map((d) => ({ hora: d.dep, acessivel: d.wa === 1, previsto: !!d.extra }));
-        if (servs.length > 1) saidas = saidas.sort((a, b) => ordem(a.hora) - ordem(b.hora));
+        if (servs.length > 1) saidas = saidas.sort((a, b) => ordemHora(a.hora) - ordemHora(b.hora));
         if (saidas.length) quadros.push({ tipoDia, origem, terminal: terminalDe(sentido.desc), saidas });
       }
     }
@@ -126,10 +112,4 @@ export function montarLinha(
     },
     pontos: [...pontos.values()],
   };
-}
-
-/** Minutos para ordenar horários; madrugada (< 03h) vai para o fim do dia de operação. */
-function ordem(h: string): number {
-  const [hh, mm] = h.split(':').map(Number);
-  return hh * 60 + mm + (hh < 3 ? 1440 : 0);
 }
