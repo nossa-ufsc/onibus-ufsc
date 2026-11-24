@@ -106,6 +106,13 @@ async function main() {
   }
   await mkdir('data', { recursive: true });
   await Bun.write(SNAPSHOT, JSON.stringify(dados, null, 1) + '\n');
+  // usado pela mensagem de commit do workflow; vazio = nada mudou nas linhas
+  const partes = [
+    m.novas.length && `novas: ${m.novas.join(', ')}`,
+    m.extintas.length && `extintas: ${m.extintas.join(', ')}`,
+    m.alteradas.length && `alteradas: ${m.alteradas.join(', ')}`,
+  ].filter(Boolean);
+  await Bun.write('data/mudancas.txt', partes.join(' · ') + '\n');
   console.log(`Snapshot gravado em ${SNAPSHOT}`);
 
   if (!SKIP_DB) {

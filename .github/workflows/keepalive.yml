@@ -17,7 +17,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ssh-key: ${{ secrets.BUS_COMMIT_SSH_KEY }}
           ref: main

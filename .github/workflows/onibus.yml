@@ -21,7 +21,7 @@ jobs:
       contents: write
     steps:
       # `ref: main` garante a ponta da branch mesmo em reruns (senão: detached HEAD e push impossível)
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ssh-key: ${{ secrets.BUS_COMMIT_SSH_KEY }}
           ref: main
@@ -44,20 +44,22 @@ jobs:
           git config user.name "onibus-ufsc-bot"
           git config user.email "onibus-ufsc-bot@users.noreply.github.com"
           # guarda o snapshot gerado e realinha na ponta da main a cada tentativa (sem rebase → sem conflito)
-          mkdir -p /tmp/novo && cp data/linhas.json /tmp/novo/ 2>/dev/null || true
+          mkdir -p /tmp/novo && cp data/linhas.json data/mudancas.txt /tmp/novo/ 2>/dev/null || true
           for i in 1 2 3; do
             git fetch origin main
             git checkout -B main origin/main
             mkdir -p data
             [ -e /tmp/novo/linhas.json ] && cp /tmp/novo/linhas.json data/linhas.json
+            [ -e /tmp/novo/mudancas.txt ] && cp /tmp/novo/mudancas.txt data/mudancas.txt
             date -u +"%Y-%m-%dT%H:%M:%SZ" > data/last-run.txt
             echo "${{ steps.coleta.outcome }}" > data/last-status.txt
             git add data/
             if git diff --cached --quiet; then echo "Nada para commitar."; exit 0; fi
-            if git diff --cached --quiet -- data/linhas.json; then
-              msg="chore: coleta $(date -u +%F) (${{ steps.coleta.outcome }})"
+            mud="$(cat /tmp/novo/mudancas.txt 2>/dev/null | tr -d '\n')"
+            if [ "${{ steps.coleta.outcome }}" = "success" ] && [ -n "$mud" ]; then
+              msg="feat(linhas): $mud ($(date -u +%F))"
             else
-              msg="chore: atualiza linhas de ônibus ($(date -u +%F))"
+              msg="chore: coleta $(date -u +%F) (${{ steps.coleta.outcome }})"
             fi
             git commit -m "$msg"
             git push origin main && exit 0
