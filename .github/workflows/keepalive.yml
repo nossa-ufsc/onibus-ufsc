@@ -1,0 +1,38 @@
+name: Keep-alive
+
+# Rede de segurança para a regra dos 60 dias do GitHub (workflows agendados são desativados
+# após 60 dias sem atividade). Normalmente o "Coletar Ônibus" já commita todo dia; este
+# heartbeat semanal cobre o caso de a coleta falhar antes do passo de commit por semanas.
+#
+# Usa a deploy key SSH (secrets.BUS_COMMIT_SSH_KEY) — commits do GITHUB_TOKEN NÃO contam.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 12 * * 1" # toda segunda 09:41 BRT
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ssh-key: ${{ secrets.BUS_COMMIT_SSH_KEY }}
+          ref: main
+      - name: Heartbeat
+        run: |
+          git config user.name "onibus-ufsc-bot"
+          git config user.email "onibus-ufsc-bot@users.noreply.github.com"
+          for i in 1 2 3; do
+            git fetch origin main
+            git checkout -B main origin/main
+            mkdir -p data
+            date -u +"%Y-%m-%dT%H:%M:%SZ" > data/keepalive.txt
+            git add data/keepalive.txt
+            git commit -m "chore: keep-alive $(date -u +%F)"
+            git push origin main && exit 0
+            echo "Push falhou; tentativa $i/3…"
+          done
+          exit 1

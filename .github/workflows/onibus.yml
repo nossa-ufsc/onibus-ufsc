@@ -1,0 +1,73 @@
+name: Coletar Ônibus
+
+# Todo dia: lê a tabela oficial do Consórcio Fênix, fica com as linhas que passam no campus
+# Trindade, valida e envia ao Convex (POST /ingest/bus-lines). No fim, commita o snapshot em
+# data/ via deploy key SSH — o push com deploy key conta como atividade e impede o GitHub de
+# desabilitar os workflows agendados (regra dos 60 dias; commits do GITHUB_TOKEN NÃO contam).
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 9 * * *" # todo dia 06:23 BRT — fora do minuto :00 p/ evitar drop de agendados
+
+concurrency:
+  group: coletar-onibus
+  cancel-in-progress: false
+
+jobs:
+  coletar:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      # `ref: main` garante a ponta da branch mesmo em reruns (senão: detached HEAD e push impossível)
+      - uses: actions/checkout@v4
+        with:
+          ssh-key: ${{ secrets.BUS_COMMIT_SSH_KEY }}
+          ref: main
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+
+      - name: Coletar, validar e enviar
+        id: coleta
+        continue-on-error: true # o commit abaixo roda mesmo assim (keep-alive); o job falha no fim
+        env:
+          CONVEX_SITE_URL: ${{ secrets.CONVEX_SITE_URL }}
+          INGEST_API_KEY: ${{ secrets.INGEST_API_KEY }}
+        run: bun src/index.ts
+
+      - name: Commit e push (snapshot + keep-alive)
+        if: always()
+        run: |
+          git config user.name "onibus-ufsc-bot"
+          git config user.email "onibus-ufsc-bot@users.noreply.github.com"
+          # guarda o snapshot gerado e realinha na ponta da main a cada tentativa (sem rebase → sem conflito)
+          mkdir -p /tmp/novo && cp data/linhas.json /tmp/novo/ 2>/dev/null || true
+          for i in 1 2 3; do
+            git fetch origin main
+            git checkout -B main origin/main
+            mkdir -p data
+            [ -e /tmp/novo/linhas.json ] && cp /tmp/novo/linhas.json data/linhas.json
+            date -u +"%Y-%m-%dT%H:%M:%SZ" > data/last-run.txt
+            echo "${{ steps.coleta.outcome }}" > data/last-status.txt
+            git add data/
+            if git diff --cached --quiet; then echo "Nada para commitar."; exit 0; fi
+            if git diff --cached --quiet -- data/linhas.json; then
+              msg="chore: coleta $(date -u +%F) (${{ steps.coleta.outcome }})"
+            else
+              msg="chore: atualiza linhas de ônibus ($(date -u +%F))"
+            fi
+            git commit -m "$msg"
+            git push origin main && exit 0
+            echo "Push falhou (corrida?); tentativa $i/3…"
+          done
+          echo "::error::Não foi possível pushar o snapshot."
+          exit 1
+
+      - name: Falhar se a coleta falhou
+        if: steps.coleta.outcome == 'failure'
+        run: |
+          echo "::error::A coleta ou a validação falhou; o app continua com o último dado bom. Veja o passo 'Coletar, validar e enviar'."
+          exit 1
