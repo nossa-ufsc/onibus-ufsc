@@ -9,6 +9,9 @@ on:
     workflows: ["Coletar Ônibus"]
     types: [completed]
 
+permissions:
+  contents: read
+
 jobs:
   retry:
     if: github.event.workflow_run.conclusion == 'failure' && github.event.workflow_run.run_attempt < 3
@@ -19,7 +22,10 @@ jobs:
       - name: Rerun
         env:
           GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          RUN_ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+          REPO: ${{ github.repository }}
         run: |
-          echo "Tentativa ${{ github.event.workflow_run.run_attempt }} falhou; aguardando antes do rerun…"
+          echo "Tentativa $RUN_ATTEMPT falhou; aguardando antes do rerun…"
           sleep 120
-          gh run rerun ${{ github.event.workflow_run.id }} --failed --repo ${{ github.repository }}
+          gh run rerun "$RUN_ID" --failed --repo "$REPO"

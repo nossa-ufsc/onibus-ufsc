@@ -4,11 +4,18 @@ name: Coletar Ônibus
 # linhas que passam em cada campus (src/campi.ts), valida e envia ao Convex (POST /ingest/bus-lines). No fim, commita o snapshot em
 # data/ via deploy key SSH — o push com deploy key conta como atividade e impede o GitHub de
 # desabilitar os workflows agendados (regra dos 60 dias; commits do GITHUB_TOKEN NÃO contam).
+#
+# Dois jobs: `coletar` roda bun install + a coleta SEM a deploy key (dependência comprometida
+# não consegue pushar) e publica o snapshot como artifact; `commit` faz checkout com a deploy
+# key e só roda comandos git. O retry.yml reexecuta os jobs que falharam (e os dependentes).
 
 on:
   workflow_dispatch:
   schedule:
     - cron: "23 9 * * *" # todo dia 06:23 BRT — fora do minuto :00 p/ evitar drop de agendados
+
+permissions:
+  contents: read
 
 concurrency:
   group: coletar-onibus
@@ -17,58 +24,89 @@ concurrency:
 jobs:
   coletar:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
+    outputs:
+      outcome: ${{ steps.coleta.outcome }}
     steps:
-      # `ref: main` garante a ponta da branch mesmo em reruns (senão: detached HEAD e push impossível)
-      - uses: actions/checkout@v5
+      # Sem deploy key e sem credencial persistida: este job roda dependências de terceiros.
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
         with:
-          ssh-key: ${{ secrets.BUS_COMMIT_SSH_KEY }}
           ref: main
-      - uses: oven-sh/setup-bun@v2
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
-          bun-version: latest
+          bun-version: 1.4.5
       - run: bun install --frozen-lockfile
 
       - name: Coletar, validar e enviar
         id: coleta
-        continue-on-error: true # o commit abaixo roda mesmo assim (keep-alive); o job falha no fim
+        continue-on-error: true # o commit roda mesmo assim (keep-alive); o job falha no fim
         env:
           CONVEX_SITE_URL: ${{ secrets.CONVEX_SITE_URL }}
           INGEST_API_KEY: ${{ secrets.INGEST_API_KEY }}
         run: bun src/index.ts
 
-      - name: Commit e push (snapshot + keep-alive)
+      # Publica o que houver em data/ (mesmo com a coleta falha — igual ao comportamento antigo).
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: always()
+        with:
+          name: snapshot-onibus
+          path: |
+            data/*.json
+            data/mudancas.txt
+          if-no-files-found: ignore
+          overwrite: true # reruns (retry.yml) reenviam o mesmo nome
+
+      - name: Falhar se a coleta falhou
+        if: steps.coleta.outcome == 'failure'
+        run: |
+          echo "::error::A coleta ou a validação falhou; o app continua com o último dado bom. Veja o passo 'Coletar, validar e enviar'."
+          exit 1
+
+  commit:
+    name: Commit e push (snapshot + keep-alive)
+    needs: coletar
+    if: always()
+    runs-on: ubuntu-latest
+    # O push usa a deploy key (SSH), não o GITHUB_TOKEN → basta leitura.
+    # Este job só roda comandos git: nada de bun install / código de terceiros aqui.
+    steps:
+      # `ref: main` garante a ponta da branch mesmo em reruns (senão: detached HEAD e push impossível)
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          ssh-key: ${{ secrets.BUS_COMMIT_SSH_KEY }}
+          ref: main
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        continue-on-error: true # sem artifact (coleta caiu antes) → commita só o keep-alive/status
+        with:
+          name: snapshot-onibus
+          path: ${{ runner.temp }}/novo
+      - name: Commit e push
+        env:
+          NOVO: ${{ runner.temp }}/novo
+          # outcome do passo de coleta (success/failure/skipped); vazio se o job nem chegou a reportar
+          OUTCOME: ${{ needs.coletar.outputs.outcome || needs.coletar.result }}
         run: |
           git config user.name "onibus-ufsc-bot"
           git config user.email "onibus-ufsc-bot@users.noreply.github.com"
-          # guarda o snapshot gerado e realinha na ponta da main a cada tentativa (sem rebase → sem conflito)
-          mkdir -p /tmp/novo && cp data/*.json data/mudancas.txt /tmp/novo/ 2>/dev/null || true
+          # realinha na ponta da main a cada tentativa e reconstrói o commit por cima (sem rebase → sem conflito)
           for i in 1 2 3; do
             git fetch origin main
             git checkout -B main origin/main
             mkdir -p data
-            cp /tmp/novo/* data/ 2>/dev/null || true
+            cp "$NOVO"/* data/ 2>/dev/null || true
             date -u +"%Y-%m-%dT%H:%M:%SZ" > data/last-run.txt
-            echo "${{ steps.coleta.outcome }}" > data/last-status.txt
+            echo "$OUTCOME" > data/last-status.txt
             git add data/
             if git diff --cached --quiet; then echo "Nada para commitar."; exit 0; fi
-            mud="$(cat /tmp/novo/mudancas.txt 2>/dev/null | tr -d '\n')"
-            if [ "${{ steps.coleta.outcome }}" = "success" ] && [ -n "$mud" ]; then
+            mud="$(cat "$NOVO/mudancas.txt" 2>/dev/null | tr -d '\n' || true)"
+            if [ "$OUTCOME" = "success" ] && [ -n "$mud" ]; then
               msg="feat(linhas): $mud ($(date -u +%F))"
             else
-              msg="chore: coleta $(date -u +%F) (${{ steps.coleta.outcome }})"
+              msg="chore: coleta $(date -u +%F) ($OUTCOME)"
             fi
             git commit -m "$msg"
             git push origin main && exit 0
             echo "Push falhou (corrida?); tentativa $i/3…"
           done
           echo "::error::Não foi possível pushar o snapshot."
-          exit 1
-
-      - name: Falhar se a coleta falhou
-        if: steps.coleta.outcome == 'failure'
-        run: |
-          echo "::error::A coleta ou a validação falhou; o app continua com o último dado bom. Veja o passo 'Coletar, validar e enviar'."
           exit 1
