@@ -1,7 +1,8 @@
 {
  "versao": 1,
+ "campus": "florianopolis",
  "fonte": "https://www.consorciofenix.com.br/horarios",
- "coletadoEm": "2026-11-24T02:26:55.330Z",
+ "coletadoEm": "2026-11-24T03:04:26.634Z",
  "diasEspeciais": {
   "2026-01-01": "domingo",
   "2026-02-16": "sabado",

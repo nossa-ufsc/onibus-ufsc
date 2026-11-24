@@ -78,6 +78,7 @@ async function main() {
   const ano = agora.getUTCFullYear();
   const dados: DadosOnibus = {
     versao: 1,
+    campus: 'florianopolis',
     fonte: `${BASE}/horarios`,
     coletadoEm: agora.toISOString(),
     diasEspeciais: diasEspeciais([ano, ano + 1]),

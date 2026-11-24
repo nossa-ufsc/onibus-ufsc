@@ -60,6 +60,8 @@ export interface Linha {
 
 export interface DadosOnibus {
   versao: 1;
+  /** Campus do app (enum Campus do nossa-ufsc). Por enquanto só o Trindade. */
+  campus: 'florianopolis';
   fonte: string;
   /** Quando a coleta rodou (ISO). */
   coletadoEm: string;
