@@ -2,7 +2,7 @@
  "versao": 1,
  "campus": "blumenau",
  "fonte": "https://bus2.info/reports/2you/5f1lx",
- "coletadoEm": "2026-11-27T03:25:24.283Z",
+ "coletadoEm": "2026-11-27T19:03:09.898Z",
  "diasEspeciais": {
   "2026-01-01": "domingo",
   "2026-02-16": "sabado",
@@ -168223,6 +168223,23 @@
      ]
     },
     {
+     "tipoDia": "sabado",
+     "origem": "Divisa Indaial (Sai Rua Lois Lucas (Ponto Próx. BR 470) / Trevo Celeiro / Udo Deeke / Term. Aterro)",
+     "terminal": null,
+     "saidas": [
+      {
+       "hora": "09:00",
+       "acessivel": true,
+       "previsto": false
+      },
+      {
+       "hora": "13:00",
+       "acessivel": true,
+       "previsto": false
+      }
+     ]
+    },
+    {
      "tipoDia": "util",
      "origem": "Divisa Indaial (Sai BR470 Km 62,5 (Ponto Breitkopf Caminhões) / Br 470 Udo Deeke / Term. Aterro)",
      "terminal": null,
@@ -168246,6 +168263,18 @@
       },
       {
        "hora": "21:45",
+       "acessivel": true,
+       "previsto": false
+      }
+     ]
+    },
+    {
+     "tipoDia": "sabado",
+     "origem": "Term. Aterro (Term. Aterro / Udo Deeke / Rua Candelária / Rua Lois Lucas Até Ponto Próximo BR 470)",
+     "terminal": null,
+     "saidas": [
+      {
+       "hora": "08:35",
        "acessivel": true,
        "previsto": false
       }
@@ -169269,6 +169298,103 @@
      ]
     },
     {
+     "nome": "Term. Aterro / Udo Deeke / Rua Candelária / Rua Lois Lucas Até Ponto Próximo BR 470",
+     "origens": [
+      "Circular - Term. Aterro (Term. Aterro / Udo Deeke / Rua Candelária / Rua Lois Lucas Até Ponto Próximo BR 470)"
+     ],
+     "terminal": null,
+     "comprimentoM": 2889,
+     "coordenadas": [
+      [
+       -49.09537,
+       -26.87066
+      ],
+      [
+       -49.09495,
+       -26.87071
+      ],
+      [
+       -49.09494,
+       -26.87098
+      ],
+      [
+       -49.09604,
+       -26.871
+      ],
+      [
+       -49.09618,
+       -26.87167
+      ],
+      [
+       -49.09719,
+       -26.87206
+      ],
+      [
+       -49.1066,
+       -26.87369
+      ],
+      [
+       -49.10681,
+       -26.87409
+      ],
+      [
+       -49.10885,
+       -26.87501
+      ],
+      [
+       -49.10937,
+       -26.87502
+      ],
+      [
+       -49.11296,
+       -26.87413
+      ],
+      [
+       -49.11384,
+       -26.87369
+      ],
+      [
+       -49.11431,
+       -26.87304
+      ],
+      [
+       -49.11398,
+       -26.87263
+      ],
+      [
+       -49.11393,
+       -26.87228
+      ],
+      [
+       -49.11469,
+       -26.8704
+      ],
+      [
+       -49.1138,
+       -26.86982
+      ],
+      [
+       -49.11343,
+       -26.86982
+      ],
+      [
+       -49.11305,
+       -26.8704
+      ],
+      [
+       -49.11206,
+       -26.87147
+      ]
+     ],
+     "pontos": [
+      {
+       "pontoId": "t8rj",
+       "distanciaM": 0,
+       "segundos": 0
+      }
+     ]
+    },
+    {
      "nome": "Term. Aterro/ Udo Deeke/ Divisa Indaial/ Norte Shopping/ Term. Aterro",
      "origens": [
       "Circular - Term. Aterro (Term. Aterro/ Udo Deeke/ Divisa Indaial/ Norte Shopping/ Term. Aterro)"
@@ -169751,103 +169877,6 @@
        "pontoId": "sco1",
        "distanciaM": 22216,
        "segundos": 3354
-      }
-     ]
-    },
-    {
-     "nome": "Term. Aterro / Udo Deeke / Rua Candelária / Rua Lois Lucas Até Ponto Próximo BR 470",
-     "origens": [
-      "Circular - Term. Aterro (Term. Aterro / Udo Deeke / Rua Candelária / Rua Lois Lucas Até Ponto Próximo BR 470)"
-     ],
-     "terminal": null,
-     "comprimentoM": 2889,
-     "coordenadas": [
-      [
-       -49.09537,
-       -26.87066
-      ],
-      [
-       -49.09495,
-       -26.87071
-      ],
-      [
-       -49.09494,
-       -26.87098
-      ],
-      [
-       -49.09604,
-       -26.871
-      ],
-      [
-       -49.09618,
-       -26.87167
-      ],
-      [
-       -49.09719,
-       -26.87206
-      ],
-      [
-       -49.1066,
-       -26.87369
-      ],
-      [
-       -49.10681,
-       -26.87409
-      ],
-      [
-       -49.10885,
-       -26.87501
-      ],
-      [
-       -49.10937,
-       -26.87502
-      ],
-      [
-       -49.11296,
-       -26.87413
-      ],
-      [
-       -49.11384,
-       -26.87369
-      ],
-      [
-       -49.11431,
-       -26.87304
-      ],
-      [
-       -49.11398,
-       -26.87263
-      ],
-      [
-       -49.11393,
-       -26.87228
-      ],
-      [
-       -49.11469,
-       -26.8704
-      ],
-      [
-       -49.1138,
-       -26.86982
-      ],
-      [
-       -49.11343,
-       -26.86982
-      ],
-      [
-       -49.11305,
-       -26.8704
-      ],
-      [
-       -49.11206,
-       -26.87147
-      ]
-     ],
-     "pontos": [
-      {
-       "pontoId": "t8rj",
-       "distanciaM": 0,
-       "segundos": 0
       }
      ]
     },
@@ -176224,6 +176253,103 @@
      ]
     },
     {
+     "nome": "Term. Aterro / Udo Deeke / Rua Candelária / Rua Lois Lucas Até Ponto Próximo BR 470",
+     "origens": [
+      "Term. Aterro (Term. Aterro / Udo Deeke / Rua Candelária / Rua Lois Lucas Até Ponto Próximo BR 470)"
+     ],
+     "terminal": null,
+     "comprimentoM": 2889,
+     "coordenadas": [
+      [
+       -49.09537,
+       -26.87066
+      ],
+      [
+       -49.09495,
+       -26.87071
+      ],
+      [
+       -49.09494,
+       -26.87098
+      ],
+      [
+       -49.09604,
+       -26.871
+      ],
+      [
+       -49.09618,
+       -26.87167
+      ],
+      [
+       -49.09719,
+       -26.87206
+      ],
+      [
+       -49.1066,
+       -26.87369
+      ],
+      [
+       -49.10681,
+       -26.87409
+      ],
+      [
+       -49.10885,
+       -26.87501
+      ],
+      [
+       -49.10937,
+       -26.87502
+      ],
+      [
+       -49.11296,
+       -26.87413
+      ],
+      [
+       -49.11384,
+       -26.87369
+      ],
+      [
+       -49.11431,
+       -26.87304
+      ],
+      [
+       -49.11398,
+       -26.87263
+      ],
+      [
+       -49.11393,
+       -26.87228
+      ],
+      [
+       -49.11469,
+       -26.8704
+      ],
+      [
+       -49.1138,
+       -26.86982
+      ],
+      [
+       -49.11343,
+       -26.86982
+      ],
+      [
+       -49.11305,
+       -26.8704
+      ],
+      [
+       -49.11206,
+       -26.87147
+      ]
+     ],
+     "pontos": [
+      {
+       "pontoId": "t8rj",
+       "distanciaM": 0,
+       "segundos": 0
+      }
+     ]
+    },
+    {
      "nome": "Term. Aterro/ Udo Deeke/ Divisa Indaial/ Norte Shopping/ Term. Aterro",
      "origens": [
       "Term. Aterro (Term. Aterro/ Udo Deeke/ Divisa Indaial/ Norte Shopping/ Term. Aterro)"
@@ -176706,103 +176832,6 @@
        "pontoId": "sco1",
        "distanciaM": 22216,
        "segundos": 3354
-      }
-     ]
-    },
-    {
-     "nome": "Term. Aterro / Udo Deeke / Rua Candelária / Rua Lois Lucas Até Ponto Próximo BR 470",
-     "origens": [
-      "Term. Aterro (Term. Aterro / Udo Deeke / Rua Candelária / Rua Lois Lucas Até Ponto Próximo BR 470)"
-     ],
-     "terminal": null,
-     "comprimentoM": 2889,
-     "coordenadas": [
-      [
-       -49.09537,
-       -26.87066
-      ],
-      [
-       -49.09495,
-       -26.87071
-      ],
-      [
-       -49.09494,
-       -26.87098
-      ],
-      [
-       -49.09604,
-       -26.871
-      ],
-      [
-       -49.09618,
-       -26.87167
-      ],
-      [
-       -49.09719,
-       -26.87206
-      ],
-      [
-       -49.1066,
-       -26.87369
-      ],
-      [
-       -49.10681,
-       -26.87409
-      ],
-      [
-       -49.10885,
-       -26.87501
-      ],
-      [
-       -49.10937,
-       -26.87502
-      ],
-      [
-       -49.11296,
-       -26.87413
-      ],
-      [
-       -49.11384,
-       -26.87369
-      ],
-      [
-       -49.11431,
-       -26.87304
-      ],
-      [
-       -49.11398,
-       -26.87263
-      ],
-      [
-       -49.11393,
-       -26.87228
-      ],
-      [
-       -49.11469,
-       -26.8704
-      ],
-      [
-       -49.1138,
-       -26.86982
-      ],
-      [
-       -49.11343,
-       -26.86982
-      ],
-      [
-       -49.11305,
-       -26.8704
-      ],
-      [
-       -49.11206,
-       -26.87147
-      ]
-     ],
-     "pontos": [
-      {
-       "pontoId": "t8rj",
-       "distanciaM": 0,
-       "segundos": 0
       }
      ]
     },
@@ -181384,8 +181413,8 @@
      ]
     }
    ],
-   "hash": "1acecfcf0bb4d3f3",
-   "alteradaEm": "2026-11-24T03:22:13.251Z"
+   "hash": "5e5a1df78c671ae2",
+   "alteradaEm": "2026-11-27T19:03:09.898Z"
   },
   {
    "codigo": "155",
