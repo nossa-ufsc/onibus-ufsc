@@ -1,5 +1,6 @@
 // Envio para o app: POST {CONVEX_SITE_URL}/ingest/bus-lines com Bearer INGEST_API_KEY
 // (mesmo esquema de /ingest/menu e /ingest/academic-calendar em nossa-ufsc/convex/http.ts).
+// CONVEX_SITE_URL aceita vários deployments separados por vírgula (dev e prod).
 
 import { distLL, type LonLat } from './geo';
 import type { DadosOnibus } from './types';
@@ -45,19 +46,31 @@ export function paraApp(dados: DadosOnibus): DadosOnibus {
 }
 
 export async function enviarParaConvex(dados: DadosOnibus): Promise<'enviado' | 'sem-config'> {
-  const base = process.env.CONVEX_SITE_URL?.replace(/\/$/, '');
+  const bases = convexSiteUrls();
   const chave = process.env.INGEST_API_KEY;
-  if (!base || !chave) return 'sem-config';
+  if (!bases.length || !chave) return 'sem-config';
   const corpo = JSON.stringify(paraApp(dados));
   // documento do Convex: máx. 1 MB — falha aqui, com mensagem clara, em vez de no servidor
   if (corpo.length > 900_000) throw new Error(`payload de ${dados.campus} com ${Math.round(corpo.length / 1024)} KB (> 900 KB)`);
 
-  const res = await fetch(`${base}/ingest/bus-lines`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', authorization: `Bearer ${chave}` },
-    body: corpo,
-    signal: AbortSignal.timeout(60_000),
-  });
-  if (!res.ok) throw new Error(`Convex /ingest/bus-lines -> HTTP ${res.status}: ${await res.text()}`);
+  const erros: string[] = [];
+  for (const base of bases) {
+    const res = await fetch(`${base}/ingest/bus-lines`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${chave}` },
+      body: corpo,
+      signal: AbortSignal.timeout(60_000),
+    }).catch((err: unknown) => err as Error);
+    if (res instanceof Error) erros.push(`${base}: ${res.message}`);
+    else if (!res.ok) erros.push(`${base}: HTTP ${res.status}: ${await res.text()}`);
+  }
+  if (erros.length) throw new Error(`Convex /ingest/bus-lines -> ${erros.join(' | ')}`);
   return 'enviado';
+}
+
+function convexSiteUrls(): string[] {
+  return (process.env.CONVEX_SITE_URL ?? '')
+    .split(',')
+    .map((url) => url.trim().replace(/\/$/, ''))
+    .filter(Boolean);
 }
